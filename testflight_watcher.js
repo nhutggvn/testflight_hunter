@@ -1,12 +1,19 @@
+import { config } from 'dotenv';
+config();
 import axios from 'axios';
 import * as cheerio from 'cheerio';
+
+
 import sendNotification from "./telegram_bot.js";
+
+
 const XPATH_STATUS = '.beta-status span';
 const TESTFLIGHT_URL = 'https://testflight.apple.com/join/';
 const FULL_TEXT = 'This beta is full.';
-const ID_LIST = ['gdE4pRzI','MY6JTzix','fzDLkIVK'];
+const ID_LIST = process.env.ID_LIST.split(',');
+const SLEEP_TIME = process.env.INTERVAL_CHECK;
 
-function watch(watchIds, callback, notifyFull = true, sleepTime = 10000) {
+function watch(watchIds, sendNotification,sleepTime = 10000) {
     setInterval(async () => {
    const watcher =  async () => {
         for (const tfId of watchIds) {
@@ -16,16 +23,16 @@ function watch(watchIds, callback, notifyFull = true, sleepTime = 10000) {
                 });
                 const $ = cheerio.load(response.data);
                 const statusText = $(XPATH_STATUS).text().trim();
-                console.log(tfId," : ",statusText)
                 const freeSlots = statusText !== FULL_TEXT;
 
                 if(freeSlots)
                 {
                     const message = `${TESTFLIGHT_URL + tfId}`
-                    await callback(message);
+                    await sendNotification(message);
                 }
+                console.log(`Status: ${statusText}`)
             } catch (error) {
-                console.error("Error fetching TestFlight page:", error);
+                console.error("watch function: ", error);
             }
         }
     }
@@ -33,6 +40,4 @@ function watch(watchIds, callback, notifyFull = true, sleepTime = 10000) {
     }, sleepTime);  
 }
 
-watch(ID_LIST, sendNotification, true, 10000);
-
-export default watch;
+watch(ID_LIST, sendNotification,SLEEP_TIME);
