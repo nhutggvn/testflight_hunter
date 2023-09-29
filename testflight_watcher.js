@@ -3,6 +3,7 @@ config();
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 
+import http from 'http';
 
 import sendNotification from "./telegram_bot.js";
 
@@ -14,40 +15,47 @@ const ID_LIST = process.env.ID_LIST.split(',');
 const SLEEP_TIME = process.env.INTERVAL_CHECK;
 const TITLE_REGEX = /Join the (.+) beta - TestFlight - Apple/;
 
-function watch(watchIds, sendNotification,sleepTime = 10000) {
-    setInterval(async () => {
-   const watcher =  async () => {
-        for (const tfId of watchIds) {
-            try {
-                const response = await axios.get(TESTFLIGHT_URL + tfId, {
-                    headers: { 'Accept-Language': 'en-us' }
-                });
+function watch(watchIds, sendNotification, sleepTime = 10000) {
+  const server = http.createServer(function(req, res) {
+    res.write("I'm alive");
+    res.end();
+  });
 
-                if(!response.data) 
-                console.log(response.status,` - ${tfId} - Invalid ID`)
+  server.listen(8080);
 
-                const $ = cheerio.load(response.data);
-                const statusText = $(XPATH_STATUS).text().trim();
-                const freeSlots = statusText !== FULL_TEXT;
+  setInterval(async () => {
+    const watcher = async () => {
+      for (const tfId of watchIds) {
+        try {
+          const response = await axios.get(TESTFLIGHT_URL + tfId, {
+            headers: { 'Accept-Language': 'en-us' }
+          });
 
-                // get title using regex
-                const title = $('title').text();
-                const titleMatch = title.match(TITLE_REGEX);
+          if (!response.data)
+            console.log(response.status, ` - ${tfId} - Invalid ID`)
 
-                if(freeSlots)
-                {
-                    const message = `${TESTFLIGHT_URL + tfId}`
-                    await sendNotification(message);
-                }
-                console.log(response.status,` - ${tfId} - ${titleMatch[1]} --- Status: ${freeSlots}`)
-            } catch (error) {
-                console.log(error.response.status,` - ${tfId} - Invalid ID`)
-                //console.error("watch function: ", error);
-            }
+          const $ = cheerio.load(response.data);
+          const statusText = $(XPATH_STATUS).text().trim();
+          const freeSlots = statusText !== FULL_TEXT;
+
+          // get title using regex
+          const title = $('title').text();
+          const titleMatch = title.match(TITLE_REGEX);
+
+          if (freeSlots) {
+            const message = `${TESTFLIGHT_URL + tfId}`
+            await sendNotification(message);
+          }
+          console.log(response.status, ` - ${tfId} - ${titleMatch[1]} --- Status: ${freeSlots}`)
+        } catch (error) {
+          console.log(error.response.status, ` - ${tfId} - Invalid ID`)
+          //console.error("watch function: ", error);
         }
+      }
     }
     watcher();
-    }, sleepTime);  
+  }, sleepTime);
 }
 
-watch(ID_LIST, sendNotification,SLEEP_TIME);
+
+watch(ID_LIST, sendNotification, SLEEP_TIME);
