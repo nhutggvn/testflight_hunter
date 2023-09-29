@@ -26,4 +26,6 @@ NodeJS : `18.18.0`
 `ID_LIST` : Each testflight `ID` separated by commas  
 `INTERVAL_CHECK` : Change this value for n time check, 1000 = 1 second
 
-**3.** Run `node testflight_watcher.js`
+**3.** Run `yarn`
+
+**4.** Run `node testflight_watcher.js`
