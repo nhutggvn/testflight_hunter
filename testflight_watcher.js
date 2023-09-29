@@ -28,7 +28,7 @@ function watch(watchIds, sendNotification, sleepTime = 10000) {
 
   // create a server to keep the script alive
   const server = http.createServer(async function(req, res) {
-    res.write(`Bot is alive`);
+    res.write("Bot is alive");
     res.end();
   });
 
