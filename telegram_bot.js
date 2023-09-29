@@ -23,7 +23,7 @@ const sendNotification =  (message)=>{
 
     })
     .catch(error => {
-      console.error('sendNotification function: ', error);
+        console.log(error.response.status,` - ${error.response.data.description}`)
     });
 }
 

@@ -22,8 +22,10 @@ function watch(watchIds, sendNotification,sleepTime = 10000) {
                 const response = await axios.get(TESTFLIGHT_URL + tfId, {
                     headers: { 'Accept-Language': 'en-us' }
                 });
-                if(response.status !== 200) throw new Error("Status code is not 200");
-                if(!response.data) throw new Error("No data");
+
+                if(!response.data) 
+                console.log(response.status,` - ${tfId} - Invalid ID`)
+
                 const $ = cheerio.load(response.data);
                 const statusText = $(XPATH_STATUS).text().trim();
                 const freeSlots = statusText !== FULL_TEXT;
@@ -37,9 +39,10 @@ function watch(watchIds, sendNotification,sleepTime = 10000) {
                     const message = `${TESTFLIGHT_URL + tfId}`
                     await sendNotification(message);
                 }
-                console.log(`${titleMatch[1]} --- Status: ${freeSlots}`)
+                console.log(response.status,` - ${tfId} - ${titleMatch[1]} --- Status: ${freeSlots}`)
             } catch (error) {
-                console.error("watch function: ", error);
+                console.log(error.response.status,` - ${tfId} - Invalid ID`)
+                //console.error("watch function: ", error);
             }
         }
     }
