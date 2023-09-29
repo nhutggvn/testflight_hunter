@@ -4,7 +4,6 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 
 import http from 'http';
-import http from 'http';
 
 import sendNotification from "./telegram_bot.js";
 
