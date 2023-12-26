@@ -1,41 +1,21 @@
-import { config } from 'dotenv';
-config();
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-
-import http from 'http';
-
-import sendNotification from "./telegram_bot.js";
-
+import { config } from 'dotenv';
+config();
+import botCustom from './botCustom.js';
 import fs from 'fs';
 import { promisify } from 'util';
+import constant from './constant.js';
 const readFile = promisify(fs.readFile);
 const XPATH_STATUS = '.beta-status span';
 const TEST_FLIGHT_URL = 'https://testflight.apple.com/join/';
 const FULL_TEXT = 'This beta is full.';
 const NOT_OPEN_TEXT = "This beta isn't accepting any new testers right now.";
-const INTERVAL_CHECK = process.env.INTERVAL_CHECK;
 const TITLE_REGEX = /To join the (.*), open the link on your iPhone, iPad, or Mac after you install TestFlight./;
-let isReadingFile = false;
+import state from './state.js';
+import telegramCommand from './telegramCommand.js';
+
 function watch(sendNotification, INTERVAL_CHECK = 10000) {
-
-  // send notification to telegram bot to check if the script is alive
-  setInterval(async () => {
-    const currentTime = new Date();
-    const message = `I'm alive - ${currentTime}`
-    await sendNotification(message);
-    console.log(message);
-  }, 60*60*1000);
-
-
-  // create a server to keep the script alive
-  const server = http.createServer(async function(req, res) {
-    res.write("Bot is alive");
-    res.end();
-  });
-
-  // listen to port 8080
-  server.listen(8080);
 
   // watchIdSent is used to keep track of the watchIds that have been sent to the bot
   const watchIdSent = [];
@@ -46,9 +26,12 @@ function watch(sendNotification, INTERVAL_CHECK = 10000) {
   }, 24 * 60 * 60 * 1000); // Reset the list in 1 day (24 hours * 60 minutes * 60 seconds * 1000 milliseconds)
   
   async function getTfList() {
-    isReadingFile = true;
+    if (state.isReadingFile) {
+      return;
+    }
+    state.isReadingFile= true;
     const data = await readFile('./tf_list.json');
-    isReadingFile = false;
+    state.isReadingFile = false;
     return JSON.parse(data).ID_LIST;
   }
   
@@ -56,8 +39,7 @@ function watch(sendNotification, INTERVAL_CHECK = 10000) {
   setInterval(async () => {
     const tfList = await getTfList();
 
-    if(!isReadingFile)
-    {
+    if(state.isReadingFile === false) {
     const watcher = async () => {
       for (const tfId of tfList) {
         try {
@@ -77,7 +59,7 @@ function watch(sendNotification, INTERVAL_CHECK = 10000) {
           if(isAvailableSlot && !watchIdSent.includes(tfId))
           {
             const tfLink = `${TEST_FLIGHT_URL + tfId}`
-            await sendNotification(tfLink);
+            await sendNotification(tfLink,constant.CHAT_ID,constant.TOPIC_ID);
             // add the tfId to the watchIdSent
             watchIdSent.push(tfId);
             console.log(response.status,` - ${tfId} - Slot available`)
@@ -104,4 +86,4 @@ function watch(sendNotification, INTERVAL_CHECK = 10000) {
 }
 
 
-watch(sendNotification, INTERVAL_CHECK);
+watch(botCustom.sendTopic, constant.INTERVAL_CHECK);
