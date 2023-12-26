@@ -9,15 +9,16 @@ import sendNotification from "./telegram_bot.js";
 
 
 const XPATH_STATUS = '.beta-status span';
-const TESTFLIGHT_URL = 'https://testflight.apple.com/join/';
+const TEST_FLIGHT_URL = 'https://testflight.apple.com/join/';
 const FULL_TEXT = 'This beta is full.';
 const NOT_OPEN_TEXT = "This beta isn't accepting any new testers right now.";
 const ID_LIST = process.env.ID_LIST.split(',');
 const SLEEP_TIME = process.env.INTERVAL_CHECK;
-const TITLE_REGEX = /Join the (.+) beta - TestFlight - Apple/;
+const TITLE_REGEX = /To join the (.*), open the link on your iPhone, iPad, or Mac after you install TestFlight./;
 
 function watch(watchIds, sendNotification, sleepTime = 10000) {
 
+  // send notification to telegram bot to check if the script is alive
   setInterval(async () => {
     const currentTime = new Date();
     const message = `I'm alive - ${currentTime}`
@@ -32,48 +33,54 @@ function watch(watchIds, sendNotification, sleepTime = 10000) {
     res.end();
   });
 
+  // listen to port 8080
   server.listen(8080);
 
+  // watchIdSent is used to keep track of the watchIds that have been sent to the bot
+  const watchIdSent = [];
+
+  setTimeout(() => {
+    watchIdSent.length = 0;
+    console.log('watchIdSent list has been reset.');
+  }, 24 * 60 * 60 * 1000); // Reset the list in 1 day (24 hours * 60 minutes * 60 seconds * 1000 milliseconds)
+  
+  // start the watcher
   setInterval(async () => {
     const watcher = async () => {
       for (const tfId of watchIds) {
         try {
-          const response = await axios.get(TESTFLIGHT_URL + tfId, {
+          const response = await axios.get(TEST_FLIGHT_URL + tfId, {
             headers: { 'Accept-Language': 'en-us' }
           });
 
-  
-          if (!response.data)
-          {
-            console.log(response.status, ` - ${tfId} - Not Found.`)
-            continue;
-          }
-
           const $ = cheerio.load(response.data);
           const statusText = $(XPATH_STATUS).text().trim();
-          const fullSlot = statusText === FULL_TEXT;
-          const notOpen = statusText === NOT_OPEN_TEXT;
+          const isAvailableSlot = statusText.match(TITLE_REGEX);
+          const isFullSlot = statusText === FULL_TEXT;
+          const isNotOpen = statusText === NOT_OPEN_TEXT;
 
-          // case: not open
-          if (notOpen) {
-            console.log(response.status, ` - ${tfId} - ${statusText}`)
-            continue;
+          // case 1: Open for testing, slot available
+          if(isAvailableSlot && !watchIdSent.includes(tfId))
+          {
+            const tfLink = `${TEST_FLIGHT_URL + tfId}`
+            await sendNotification(tfLink);
+            // add the tfId to the watchIdSent
+            watchIdSent.push(tfId);
+            console.log(response.status,` - ${tfId} - Slot available`)
+          }
+          
+          // case 2: Open for testing, slot full
+          if (isFullSlot) {
+            console.log(response.status,` - ${tfId} - Full slot`)
           }
 
-          const title = $('title').text();
-          const titleMatch = title.match(TITLE_REGEX);
-          // case: slot full
-          if(fullSlot){
-            console.log(response.status, ` - ${tfId} - ${titleMatch[1]} - ${statusText}`)
-            continue;
+          // case 3: Not open for testing
+          if (isNotOpen) {
+            console.log(response.status,` - ${tfId} - Not open for testing`)
           }
-          // case: slot available
-          const tfLink = `${TESTFLIGHT_URL + tfId}`
-          await sendNotification(tfLink);
-          console.log(response.status, ` - ${tfId} - ${titleMatch[1]} - ${statusText}`)
         } catch (error) {
-          console.log(error.response.status, ` - ${tfId} - Invalid ID`)
-          //console.error("watch function: ", error);
+          // case 4: Invalid ID or Removed
+          console.log(error.response.status, ` - ${tfId} - Invalid ID or Removed`)
         }
       }
     }
