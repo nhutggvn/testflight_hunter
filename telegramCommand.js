@@ -30,6 +30,12 @@ bot.onText(/\/remove (.+)/, (msg, match) => {
 
 });
 
+bot.onText(/\/list/, (msg) => {
+  fileHandler.listTfId((message) => {
+    botCustom.sendTopic(message,constant.CHAT_ID, constant.TOPIC_ID );
+  });
+});
+
 // Handle unknown commands
 // bot.onText(/\/help/, (msg) => {
 //   const chatId = msg.chat.id;

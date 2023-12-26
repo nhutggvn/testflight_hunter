@@ -46,8 +46,26 @@ const removeTfId = async (tfId,sendMessage) => {
     state.isReadingFile = false;
 }
 
+// list all tfId from tf_list.json
+const listTfId = async (sendMessage) => {
+    if(state.isReadingFile) {
+        return;
+    }
+    state.isReadingFile = true;
+    const data = await readFile('./tf_list.json');
+    const tfList = JSON.parse(data).ID_LIST;
+    let message = 'List of tfId:\n';
+    tfList.forEach((tfId) => {
+        message += tfId + '\n';
+    });
+    sendMessage(message)
+    console.log(message);
+    state.isReadingFile = false;
+}
+
 const fileHandler = {
     addTfId,
-    removeTfId
+    removeTfId,
+    listTfId
 }
 export default fileHandler;
