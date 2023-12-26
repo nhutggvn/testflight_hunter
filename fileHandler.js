@@ -18,6 +18,8 @@ const addTfId = async (tfId,sendMessage) => {
     tfList.push(tfId);
     const newData = JSON.stringify({ ID_LIST: tfList });
     await writeFile('./tf_list.json', newData);
+    console.log('tfId added!!!');
+    sendMessage('tfId added!!!')
     state.isReadingFile = false;
 }
 
