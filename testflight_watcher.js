@@ -7,16 +7,17 @@ import http from 'http';
 
 import sendNotification from "./telegram_bot.js";
 
-
+import fs from 'fs';
+import { promisify } from 'util';
+const readFile = promisify(fs.readFile);
 const XPATH_STATUS = '.beta-status span';
 const TEST_FLIGHT_URL = 'https://testflight.apple.com/join/';
 const FULL_TEXT = 'This beta is full.';
 const NOT_OPEN_TEXT = "This beta isn't accepting any new testers right now.";
-const ID_LIST = process.env.ID_LIST.split(',');
-const SLEEP_TIME = process.env.INTERVAL_CHECK;
+const INTERVAL_CHECK = process.env.INTERVAL_CHECK;
 const TITLE_REGEX = /To join the (.*), open the link on your iPhone, iPad, or Mac after you install TestFlight./;
-
-function watch(watchIds, sendNotification, sleepTime = 10000) {
+let isReadingFile = false;
+function watch(sendNotification, INTERVAL_CHECK = 10000) {
 
   // send notification to telegram bot to check if the script is alive
   setInterval(async () => {
@@ -44,10 +45,21 @@ function watch(watchIds, sendNotification, sleepTime = 10000) {
     console.log('watchIdSent list has been reset.');
   }, 24 * 60 * 60 * 1000); // Reset the list in 1 day (24 hours * 60 minutes * 60 seconds * 1000 milliseconds)
   
+  async function getTfList() {
+    isReadingFile = true;
+    const data = await readFile('./tf_list.json');
+    isReadingFile = false;
+    return JSON.parse(data).ID_LIST;
+  }
+  
   // start the watcher
   setInterval(async () => {
+    const tfList = await getTfList();
+
+    if(!isReadingFile)
+    {
     const watcher = async () => {
-      for (const tfId of watchIds) {
+      for (const tfId of tfList) {
         try {
           const response = await axios.get(TEST_FLIGHT_URL + tfId, {
             headers: { 'Accept-Language': 'en-us' }
@@ -59,11 +71,13 @@ function watch(watchIds, sendNotification, sleepTime = 10000) {
           const isFullSlot = statusText === FULL_TEXT;
           const isNotOpen = statusText === NOT_OPEN_TEXT;
 
+         
+
           // case 1: Open for testing, slot available
           if(isAvailableSlot && !watchIdSent.includes(tfId))
           {
             const tfLink = `${TEST_FLIGHT_URL + tfId}`
-            await sendNotification(tfLink);
+            //await sendNotification(tfLink);
             // add the tfId to the watchIdSent
             watchIdSent.push(tfId);
             console.log(response.status,` - ${tfId} - Slot available`)
@@ -85,8 +99,9 @@ function watch(watchIds, sendNotification, sleepTime = 10000) {
       }
     }
     watcher();
-  }, sleepTime);
+  }
+  }, INTERVAL_CHECK);
 }
 
 
-watch(ID_LIST, sendNotification, SLEEP_TIME);
+watch(sendNotification, INTERVAL_CHECK);
