@@ -8,4 +8,4 @@ RUN npm install
 
 COPY . .
 
-CMD [ "node", "./testflight_watcher.js" ]
+CMD [ "node", "./testflightWatcher.js" ]
