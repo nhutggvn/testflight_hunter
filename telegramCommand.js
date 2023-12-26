@@ -4,14 +4,18 @@ import TelegramBot from 'node-telegram-bot-api';
 import constant from './constant.js';
 import botCustom from './botCustom.js';
 import fileHandler from './fileHandler.js';
-
+import utils from './utils.js';
 
 // Create a new instance of TelegramBot with your bot token
 const bot = new TelegramBot(constant.BOT_WATCHER_TOKEN, { polling: true });
 
 // Handle the /add_testflight_id command with a topic
 bot.onText(/\/add (.+)/, (msg, match) => {
-  const testflightId = match[1];
+  let testflightId = match[1];
+  if(utils.isTfLink(testflightId)){
+    testflightId = utils.getTfCode(testflightId);
+    console.log(testflightId)
+  }
   fileHandler.addTfId(testflightId, (message) => {
     botCustom.sendTopic(message,constant.CHAT_ID, constant.TOPIC_ID );
   });

@@ -7,8 +7,7 @@ const addTfId = async (tfId,sendMessage) => {
     }
     state.isReadingFile = true;
     const data = await readFile('./tf_list.json');
-
-
+    
     const tfList = JSON.parse(data).ID_LIST;
     // check if tfId already exist
     if (tfList.includes(tfId)) {
