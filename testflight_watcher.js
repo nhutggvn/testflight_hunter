@@ -77,7 +77,7 @@ function watch(sendNotification, INTERVAL_CHECK = 10000) {
           if(isAvailableSlot && !watchIdSent.includes(tfId))
           {
             const tfLink = `${TEST_FLIGHT_URL + tfId}`
-            //await sendNotification(tfLink);
+            await sendNotification(tfLink);
             // add the tfId to the watchIdSent
             watchIdSent.push(tfId);
             console.log(response.status,` - ${tfId} - Slot available`)
