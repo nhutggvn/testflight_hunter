@@ -7,6 +7,7 @@ const sendTopic =  async (message,chatId,topicId)=>{
         chat_id: chatId,
         text: message,
         reply_to_message_id:topicId,
+        parse_mode: 'HTML',
       };
     // return a promise to post the payload to the bot
     try {

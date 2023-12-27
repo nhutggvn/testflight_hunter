@@ -14,7 +14,6 @@ bot.onText(/\/add (.+)/, (msg, match) => {
   let testflightId = match[1];
   if(utils.isTfLink(testflightId)){
     testflightId = utils.getTfCode(testflightId);
-    console.log(testflightId)
   }
   fileHandler.addTfId(testflightId, (message) => {
     botCustom.sendTopic(message,constant.CHAT_ID, constant.TOPIC_ID );
@@ -24,6 +23,9 @@ bot.onText(/\/add (.+)/, (msg, match) => {
 
 bot.onText(/\/remove (.+)/, (msg, match) => {
   const testflightId = match[1];
+  if(utils.isTfLink(testflightId)){
+    testflightId = utils.getTfCode(testflightId);
+  }
   fileHandler.removeTfId(testflightId, (message) => {
     botCustom.sendTopic(message,constant.CHAT_ID, constant.TOPIC_ID );
   });
