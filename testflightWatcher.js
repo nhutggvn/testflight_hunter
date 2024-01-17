@@ -14,10 +14,10 @@ function watch(sendNotification, INTERVAL_CHECK = 10000) {
   // watchIdSent is used to keep track of the watchIds that have been sent to the bot
   const watchIdSent = [];
 
-  setTimeout(() => {
+  setInterval(() => {
     watchIdSent.length = 0;
     console.log('watchIdSent list has been reset.');
-  }, 24 * 60 * 60 * 1000); // Reset the list in 1 day (24 hours * 60 minutes * 60 seconds * 1000 milliseconds)
+  }, 60 * 60 * 1000); // Reset the list every 1 hour (60 minutes * 60 seconds * 1000 milliseconds)
   
   // start the watcher
   setInterval(async () => {
