@@ -12,6 +12,7 @@ const constant = {
     FULL_TEXT: 'This beta is full.',
     NOT_OPEN_TEXT: "This beta isn't accepting any new testers right now.",
     TITLE_REGEX: /To join the (.*), open the link on your iPhone, iPad, or Mac after you install TestFlight./,
+    INTERVAL_CHECK: process.env.INTERVAL_CHECK
 };
 
 export default constant;
