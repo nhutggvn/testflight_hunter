@@ -9,7 +9,7 @@ const addTfId = async (tfId,sendMessage) => {
         return;
     }
     state.isReadingFile = true;
-    const data = await readFile('./tf_list.json');
+    const data = await readFile('./data/tf_list.json');
     
     const tfList = JSON.parse(data).ID_LIST;
     // check if tfId already exist
@@ -20,7 +20,7 @@ const addTfId = async (tfId,sendMessage) => {
     }
     tfList.push(tfId);
     const newData = JSON.stringify({ ID_LIST: tfList });
-    await writeFile('./tf_list.json', newData);
+    await writeFile('./data/tf_list.json', newData);
     console.log('tfId added!!!');
     sendMessage('tfId added!!!')
     state.isReadingFile = false;
@@ -32,7 +32,7 @@ const removeTfId = async (tfId,sendMessage) => {
         return;
     }
     state.isReadingFile = true;
-    const data = await readFile('./tf_list.json');
+    const data = await readFile('./data/tf_list.json');
     const tfList = JSON.parse(data).ID_LIST;
     const index = tfList.indexOf(tfId);
     // remove tfId if exist
@@ -45,7 +45,7 @@ const removeTfId = async (tfId,sendMessage) => {
         console.log('tfId not found!!!');
     }
     const newData = JSON.stringify({ ID_LIST: tfList });
-    await writeFile('./tf_list.json', newData);
+    await writeFile('./data/tf_list.json', newData);
     state.isReadingFile = false;
 }
 
@@ -55,7 +55,7 @@ const listTfId = async (sendMessage) => {
         return;
     }
     state.isReadingFile = true;
-    const data = await readFile('./tf_list.json');
+    const data = await readFile('./data/tf_list.json');
     state.isReadingFile = false;
     const tfList = JSON.parse(data).ID_LIST;
     let message = 'List of tfId:\n';
