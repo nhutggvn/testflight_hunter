@@ -5,11 +5,10 @@ services:
     build: .
     environment:
       - CHAT_ID=${CHAT_ID}
+      - TOPIC_ID = ${TOPIC_ID}
       - BOT_WATCHER_TOKEN=${BOT_WATCHER_TOKEN}
       - INTERVAL_CHECK=${INTERVAL_CHECK}
-      - PORT=${PORT}
     volumes:
-      - .:/app
-      - node_modules:/app/node_modules
-volumes:
-  node_modules:
+      - ./data:/app/data
+      # - node_modules:/app/node_modules
+    restart: always
